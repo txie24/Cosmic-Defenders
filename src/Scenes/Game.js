@@ -4,12 +4,16 @@ class D1 extends Phaser.Scene {
         this.playerSpeed = 300;
         this.bulletSpeed = -500;
         this.enemyBulletSpeed = 200;  // Speed of the enemy's bullets
-        this.enemySpeed = 50;  
+        this.enemySpeed = 50;
         this.avatar = null;
         this.bullets = null;
         this.enemyBullets = null; // Group for enemy bullets
-        this.enemies = null;  
+        this.enemies = null;
         this.keys = {};
+        this.score = 0;  // Initialize score
+        this.scoreText = null;  // Text object for displaying score
+        this.lives = 3;  // Player starts with 3 lives
+        this.livesText = null;  // Text object for displaying lives
     }
 
     preload() {
@@ -28,9 +32,13 @@ class D1 extends Phaser.Scene {
         this.enemies = this.add.group({
             classType: Phaser.GameObjects.Sprite,
             key: 'enemy',
-            repeat: 5,
-            setXY: { x: 100, y: 100, stepX: 120, stepY: 100 }
+            repeat: 3,
+            setXY: { x: 120, y: 100, stepX: 150, stepY: 100 }
         });
+
+        // Initialize score and lives text
+        this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
+        this.livesText = this.add.text(16, 50, 'Lives: 3', { fontSize: '32px', fill: '#FFF' });
 
         // Define keys
         this.keys.left = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
@@ -64,39 +72,55 @@ class D1 extends Phaser.Scene {
                         if (enemy && this.checkOverlap(bullet, enemy)) {
                             bullet.destroy();
                             enemy.destroy();
+                            this.score += 10;  // Increase score
+                            this.scoreText.setText('Score: ' + this.score);  // Update score text
                         }
                     });
                 }
             }
         });
 
-        // Enemy shooting
+        // Enemy shooting and collision with player
         this.enemies.children.iterate((enemy) => {
             if (enemy) {
                 enemy.y += this.enemySpeed * this.game.loop.delta / 1000;
+                if (enemy.y >= this.sys.game.config.height) { // Enemy crosses the bottom screen
+                    enemy.destroy();
+                    this.lives--;  // Player loses a life
+                    this.livesText.setText('Lives: ' + this.lives);
+                }
                 if (Math.random() < 0.01) { // Random chance for each enemy to shoot
                     let enemyBullet = this.enemyBullets.create(enemy.x, enemy.y + enemy.height / 2, 'enemyBullet');
                     enemyBullet.setVelocityY(this.enemyBulletSpeed);
                 }
+                if (this.checkOverlap(this.avatar, enemy)) { // Check if player collides with enemy
+                    enemy.destroy();
+                    this.lives--;  // Player loses a life
+                    this.livesText.setText('Lives: ' + this.lives);
+                }
             }
         });
 
-        // Update enemy bullet positions
+        // Update enemy bullet positions and check for collision with player
         this.enemyBullets.children.iterate((enemyBullet) => {
             if (enemyBullet) {
                 enemyBullet.y += this.enemyBulletSpeed * this.game.loop.delta / 1000;
                 if (enemyBullet.y > this.sys.game.config.height) {
                     enemyBullet.destroy();
                 }
+                if (this.checkOverlap(this.avatar, enemyBullet)) { // Enemy bullet hits player
+                    enemyBullet.destroy();
+                    this.lives--;  // Player loses a life
+                    this.livesText.setText('Lives: ' + this.lives);
+                }
             }
         });
 
-        // Enemy movement
-        this.enemies.children.iterate((enemy) => {
-            if (enemy) {
-                enemy.y += this.enemySpeed * this.game.loop.delta / 1000;
-            }
-        });
+        // Game over check
+        if (this.lives <= 0 && !this.isGameOver) {
+            this.isGameOver = true;  // Set game over flag to true
+                this.scene.restart();  // Restart the scene after a delay
+        }
     }
 
     // Utility function to check overlap between two sprites
