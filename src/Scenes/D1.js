@@ -10,8 +10,8 @@ class D1 extends Phaser.Scene {
 
     preload() {
         this.load.setPath("./assets/");
-        this.load.image('avatar', 'character_roundYellow.png');
-        this.load.image('bullet', 'effect_shot.png');
+        this.load.image('avatar', 'playerShip3_blue.png');
+        this.load.image('bullet', 'laserBlue01.png');
         document.getElementById('description').innerHTML = '<h2>D1 movement</h2>'
 
     }
