@@ -1,3 +1,4 @@
+//game.js
 class D1 extends Phaser.Scene {
     constructor() {
         super("D1");
