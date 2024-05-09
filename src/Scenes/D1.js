@@ -12,7 +12,7 @@ class D1 extends Phaser.Scene {
         this.load.setPath("./assets/");
         this.load.image('avatar', 'playerShip3_blue.png');
         this.load.image('bullet', 'laserBlue01.png');
-        document.getElementById('description').innerHTML = '<h2>D1 movement</h2>'
+        document.getElementById('description').innerHTML = '<h2>Cosmic Defenders</h2>'
 
     }
 
