@@ -1,1 +1,1 @@
-"Class assignment for CMPM 120 where we explore 1D of movement
+Cosmic Defenders takes the action into the comic world full of spaceships. The game will allow the player to become a pilot defending their space colony from the invading aliens. The story is set on a lighthearted adventure of heroism which will give players delightful experiences with a bold vividly visual art style and action oriented gameplay. I will use Kenny's assets to bring to life a vibrant and playful space environment rich in design with an emphasis on strategic shooting and dodging patterns
