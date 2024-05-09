@@ -17,7 +17,7 @@ class D1 extends Phaser.Scene {
     }
 
     create() {
-        this.avatar = this.add.sprite(400, 550, 'avatar');
+        this.avatar = this.add.sprite(350, 950, 'avatar');
         this.bullets = this.add.group();
 
         // Define keys

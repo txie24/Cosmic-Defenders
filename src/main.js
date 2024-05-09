@@ -5,11 +5,11 @@ let config = {
     parent: 'phaser-game',
     type: Phaser.CANVAS,
     render: {
-        pixelArt: true // prevent pixel art from getting blurred when scaled
+        pixelArt: true 
     },
-    width: 800,
-    height: 600,
-    scene: [D1], // Replace 'Monster' with 'D1' to reference your scene
+    width: 700,
+    height: 1000,
+    scene: [D1], 
     fps: {
         forceSetTimeOut: true,
         target: 120
