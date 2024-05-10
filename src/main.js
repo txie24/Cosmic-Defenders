@@ -4,12 +4,9 @@
 let config = {
     parent: 'phaser-game',
     type: Phaser.CANVAS,
-    render: {
-        pixelArt: true 
-    },
     width: 700,
     height: 1000,
-    scene: [D1], 
+    scene: [SceneMainMenu, D1], // SceneMainMenu is now the initial scene
     fps: {
         forceSetTimeOut: true,
         target: 120
