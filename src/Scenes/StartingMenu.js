@@ -13,11 +13,16 @@ class SceneMainMenu extends Phaser.Scene {
     this.load.image("sprBtnRestart", "sprBtnRestart.png");
     this.load.image("sprBtnRestartHover", "sprBtnRestartHover.png");
     this.load.image("sprBtnRestartDown", "sprBtnRestartDown.png");
+    this.load.image('sprBg0', 'space1.gif');
+    this.load.image('sprBg1', 'space2.gif');
+    this.load.image('sprBg2', 'space3.gif');
     this.load.audio("sndBtnOver", "sndBtnOver.wav");
     this.load.audio("sndBtnDown", "sndBtnDown.wav");
   }
 
   create() {
+    this.createStarfield(); // Create starfield first to ensure it's at the bottom
+
       this.sfx = {
           btnOver: this.sound.add("sndBtnOver"),
           btnDown: this.sound.add("sndBtnDown")
@@ -55,4 +60,19 @@ class SceneMainMenu extends Phaser.Scene {
           align: 'center'
       }).setOrigin(0.5);
   }
+
+  createStarfield() {
+    this.starfieldBack = this.add.tileSprite(0, 0, this.sys.game.config.width, this.sys.game.config.height, 'sprBg0').setOrigin(0, 0).setDepth(-2);
+    this.starfieldMiddle = this.add.tileSprite(0, 0, this.sys.game.config.width, this.sys.game.config.height, 'sprBg1').setOrigin(0, 0).setDepth(-1);
+    this.starfieldFront = this.add.tileSprite(0, 0, this.sys.game.config.width, this.sys.game.config.height, 'sprBg2').setOrigin(0, 0).setDepth(-3);
+}
+update() {
+  this.updateStarfield();
+}
+
+updateStarfield() {
+  this.starfieldBack.tilePositionY -= 0.5;
+  this.starfieldMiddle.tilePositionY -= 0.7;
+  this.starfieldFront.tilePositionY -= 1;
+}
 }

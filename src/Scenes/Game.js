@@ -27,11 +27,17 @@ class D1 extends Phaser.Scene {
         this.load.image('sprBg0', 'space1.gif');
         this.load.image('sprBg1', 'space2.gif');
         this.load.image('sprBg2', 'space3.gif');
+        this.load.audio("exp1", "sndExplode0.wav");
+        this.load.audio("exp2", "sndExplode1.wav");
     }
     
     create() {
         this.initializeGame();
         this.createStarfield(); // Create starfield first to ensure it's at the bottom
+        this.sfx = {
+            exp1: this.sound.add("exp1"),
+            exp2: this.sound.add("exp2")
+        };
 
     }
 
@@ -130,6 +136,7 @@ class D1 extends Phaser.Scene {
                         if (enemy && this.checkOverlap(bullet, enemy)) {
                             bullet.destroy();
                             enemy.destroy();
+                            this.sfx.exp1.play();
                             this.score += 10;
                             this.scoreText.setText('Score: ' + this.score);
                         }
@@ -149,8 +156,10 @@ class D1 extends Phaser.Scene {
                     if (this.checkOverlap(enemyBullet, this.avatar)) {
                         enemyBullet.destroy();
                         this.lives--;
+                        //this.sfx.hit1.play();
                         this.livesText.setText('Lives: ' + this.lives);
                         if (this.lives <= 0 && !this.isGameOver) {
+                            this.sfx.exp2.play();
                             this.isGameOver = true;
                             this.scene.start("SceneGameOver");
                         }
@@ -183,7 +192,7 @@ class D1 extends Phaser.Scene {
             }
         });
         // After iterating, check if all enemies are destroyed
-        if (this.enemies.countActive(true) === 0 && !this.isGameOver && !this.isGameWin) {
+        if (this.enemies.countActive(true) === 0 && !this.isGameWin) {
             this.isGameWin = true;
             this.scene.start("SceneWin");
         }

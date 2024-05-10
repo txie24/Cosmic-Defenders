@@ -4,6 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cosmic Defenders</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+        }
+        #phaser-game {
+            width: 500px;  /* Adjusted to fit your game's resolution */
+            height: 800px; /* Adjusted to fit your game's resolution */
+            border: 1px solid #fff;
+        }
+        #control-panel {
+            width: 200px;
+            height: 220px;  /* Adjusted to match the height of the game canvas */
+            background-color: #333;
+            margin-left: 10px;
+            margin-bottom: 585px;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: start;
+        }
+        h2, p {
+            margin: 0 0 10px 0;
+            font-family: 'Courier New', Courier, monospace; 
+        }
+    </style>
     <script src="./lib/phaser.js"></script>
     <script src="./src/Scenes/StartingMenu.js"></script>
     <script src="./src/Scenes/Game.js"></script>
@@ -13,6 +45,13 @@
 </head>
 <body>
     <div id="phaser-game"></div>
-    <span id="description"></span>
+    <div id="control-panel">
+        <h2>Game Controls</h2>
+        <p>A - Move Left</p>
+        <p>D - Move Right</p>
+        <p>W - Move Up</p>
+        <p>S - Move Down</p>
+        <p>Space - Shoot</p>
+    </div>
 </body>
 </html>
