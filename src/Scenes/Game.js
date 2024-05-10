@@ -14,7 +14,8 @@ class D1 extends Phaser.Scene {
         this.scoreText = null;
         this.lives = 3;
         this.livesText = null;
-        this.isGameOver = false; // Flag to track game over state
+        this.isGameOver = false;
+        this.isGameWin = false;
     }
 
     preload() {
@@ -23,10 +24,15 @@ class D1 extends Phaser.Scene {
         this.load.image('bullet', 'laserBlue01.png');
         this.load.image('enemy', 'enemyBlack3.png');
         this.load.image('enemyBullet', 'laserRed05.png');
+        this.load.image('sprBg0', 'space1.gif');
+        this.load.image('sprBg1', 'space2.gif');
+        this.load.image('sprBg2', 'space3.gif');
     }
-
+    
     create() {
         this.initializeGame();
+        this.createStarfield(); // Create starfield first to ensure it's at the bottom
+
     }
 
     initializeGame() {
@@ -68,33 +74,12 @@ class D1 extends Phaser.Scene {
         this.isGameWin = false; // Flag to track game win state
 
     }
-    manageEnemyActions() {
-    this.enemies.children.iterate((enemy) => {
-        if (enemy) {
-            enemy.y += this.enemySpeed * this.game.loop.delta / 1000;
-            if (enemy.y >= this.sys.game.config.height) {
-                enemy.destroy();
-                this.lives--;
-                this.livesText.setText('Lives: ' + this.lives);
-            }
-            if (Math.random() < 0.01) {
-                let enemyBullet = this.enemyBullets.create(enemy.x, enemy.y + enemy.height / 2, 'enemyBullet');
-                enemyBullet.setVelocityY(this.enemyBulletSpeed);
-                enemyBullet.setScale(0.5);
-            }
-            if (this.checkOverlap(this.avatar, enemy)) {
-                enemy.destroy();
-                this.lives--;
-                this.livesText.setText('Lives: ' + this.lives);
-            }
-        }
-    });
-    // After iterating, check if all enemies are destroyed
-    if (this.enemies.countActive(true) === 0 && !this.isGameOver && !this.isGameWin) {
-        this.isGameWin = true;
-        this.scene.start("SceneWin");
+
+    createStarfield() {
+        this.starfieldBack = this.add.tileSprite(0, 0, this.sys.game.config.width, this.sys.game.config.height, 'sprBg0').setOrigin(0, 0).setDepth(-2);
+        this.starfieldMiddle = this.add.tileSprite(0, 0, this.sys.game.config.width, this.sys.game.config.height, 'sprBg1').setOrigin(0, 0).setDepth(-1);
+        this.starfieldFront = this.add.tileSprite(0, 0, this.sys.game.config.width, this.sys.game.config.height, 'sprBg2').setOrigin(0, 0).setDepth(-3);
     }
-}
 
     update() {
         this.handlePlayerMovement();
@@ -102,8 +87,14 @@ class D1 extends Phaser.Scene {
         this.updateBullets();
         this.manageEnemyActions();
         this.checkGameOver();
+        this.updateStarfield();
     }
 
+    updateStarfield() {
+        this.starfieldBack.tilePositionY -= 0.5;
+        this.starfieldMiddle.tilePositionY -= 0.7;
+        this.starfieldFront.tilePositionY -= 1;
+    }
     handlePlayerMovement() {
         if (this.keys.left.isDown && this.avatar.x > this.avatar.width * 0.5) {
             this.avatar.x -= this.playerSpeed * this.game.loop.delta / 1000;
