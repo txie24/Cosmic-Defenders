@@ -13,6 +13,8 @@ class SceneMainMenu extends Phaser.Scene {
       this.load.image("sprBtnRestart", "sprBtnRestart.png");
       this.load.image("sprBtnRestartHover", "sprBtnRestartHover.png");
       this.load.image("sprBtnRestartDown", "sprBtnRestartDown.png");
+      this.load.image("sprBtnReset", "sprBtnReset.png");
+      this.load.image("sprBtnResetHover", "sprBtnResetHover.png");
       this.load.image('sprBg0', 'space1.gif');
       this.load.image('sprBg1', 'space2.gif');
       this.load.image('sprBg2', 'space3.gif');
@@ -68,6 +70,27 @@ class SceneMainMenu extends Phaser.Scene {
           }
       });
 
+      this.btnReset = this.add.sprite(
+        this.game.config.width * 0.5,  // Adjust position as needed
+        this.game.config.height * 0.95,  // Adjust position as needed
+        "sprBtnReset"
+    ).setInteractive();
+
+    // Button interactivity
+    this.btnReset.on("pointerover", () => {
+        this.btnReset.setTexture("sprBtnResetHover");
+    });
+    this.btnReset.on("pointerout", () => {
+        this.btnReset.setTexture("sprBtnReset");
+    });
+
+    this.btnReset.on("pointerup", () => {
+        this.btnReset.setTexture("sprBtnReset");
+        // Reset the high score
+        localStorage.removeItem('highScore');
+        this.highScore = LocalStorageUtil.getHighScore();  // This will fetch 0 after reset
+        this.highScoreText.setText('High Score: ' + this.highScore);  // Update the display
+    });
       this.title = this.add.text(this.game.config.width * 0.5, 200, "Cosmic Defenders", {
           fontFamily: 'monospace',
           fontSize: 45,
