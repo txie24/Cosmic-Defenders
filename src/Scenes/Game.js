@@ -65,8 +65,37 @@ class D1 extends Phaser.Scene {
     
         // Set the game over flag to false initially
         this.isGameOver = false;
+        this.isGameWin = false; // Flag to track game win state
+
     }
-    
+    manageEnemyActions() {
+    this.enemies.children.iterate((enemy) => {
+        if (enemy) {
+            enemy.y += this.enemySpeed * this.game.loop.delta / 1000;
+            if (enemy.y >= this.sys.game.config.height) {
+                enemy.destroy();
+                this.lives--;
+                this.livesText.setText('Lives: ' + this.lives);
+            }
+            if (Math.random() < 0.01) {
+                let enemyBullet = this.enemyBullets.create(enemy.x, enemy.y + enemy.height / 2, 'enemyBullet');
+                enemyBullet.setVelocityY(this.enemyBulletSpeed);
+                enemyBullet.setScale(0.5);
+            }
+            if (this.checkOverlap(this.avatar, enemy)) {
+                enemy.destroy();
+                this.lives--;
+                this.livesText.setText('Lives: ' + this.lives);
+            }
+        }
+    });
+    // After iterating, check if all enemies are destroyed
+    if (this.enemies.countActive(true) === 0 && !this.isGameOver && !this.isGameWin) {
+        this.isGameWin = true;
+        this.scene.start("SceneWin");
+    }
+}
+
     update() {
         this.handlePlayerMovement();
         this.handleShooting();
@@ -162,7 +191,13 @@ class D1 extends Phaser.Scene {
                 }
             }
         });
+        // After iterating, check if all enemies are destroyed
+        if (this.enemies.countActive(true) === 0 && !this.isGameOver && !this.isGameWin) {
+            this.isGameWin = true;
+            this.scene.start("SceneWin");
+        }
     }
+
 
     checkGameOver() {
         if (this.lives <= 0 && !this.isGameOver) {
@@ -170,6 +205,8 @@ class D1 extends Phaser.Scene {
             this.scene.start("SceneGameOver");
         }
     }
+
+
 
     // Utility function to check overlap between two sprites
     checkOverlap(spriteA, spriteB) {

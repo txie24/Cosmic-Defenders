@@ -6,7 +6,7 @@ let config = {
     type: Phaser.CANVAS,
     width: 500,
     height: 800,
-    scene: [SceneMainMenu, D1, SceneGameOver],
+    scene: [SceneMainMenu, D1, SceneWin, SceneGameOver, ],
     fps: {
         forceSetTimeOut: true,
         target: 120
