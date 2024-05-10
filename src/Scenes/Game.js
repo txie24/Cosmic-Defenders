@@ -94,6 +94,9 @@ class D1 extends Phaser.Scene {
         this.manageEnemyActions();
         this.checkGameOver();
         this.updateStarfield();
+        if (this.score > LocalStorageUtil.getHighScore()) {
+            LocalStorageUtil.setHighScore(this.score);
+        }
     }
 
     updateStarfield() {
@@ -225,4 +228,5 @@ class D1 extends Phaser.Scene {
         const boundsB = spriteB.getBounds();
         return Phaser.Geom.Intersects.RectangleToRectangle(boundsA, boundsB);
     }
+    
 }

@@ -5,7 +5,15 @@ class SceneWin extends Phaser.Scene {
   }
 
   create() {
-      this.title = this.add.text(this.game.config.width * 0.5, 128, "Congratulations", {
+    this.highScore = LocalStorageUtil.getHighScore();
+    this.highScoreText = this.add.text(this.game.config.width * 0.5, 250, 'High Score: ' + this.highScore, {
+        fontFamily: 'monospace',
+        fontSize: 24,
+        fontStyle: 'bold',
+        color: '#ffffff',
+        align: 'center'
+    }).setOrigin(0.5);
+      this.title = this.add.text(this.game.config.width * 0.5, 200, "Congratulations", {
           fontFamily: 'monospace',
           fontSize: 48,
           fontStyle: 'bold',

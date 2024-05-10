@@ -21,7 +21,18 @@ class SceneMainMenu extends Phaser.Scene {
       this.load.audio('bgMusic', '8bit-spaceshooter.mp3');  // Make sure this path is correct
   }
 
+
   create() {
+    this.highScore = LocalStorageUtil.getHighScore();
+    this.highScoreText = this.add.text(this.game.config.width * 0.5, 250, 'High Score: ' + this.highScore, {
+        fontFamily: 'monospace',
+        fontSize: 24,
+        fontStyle: 'bold',
+        color: '#ffffff',
+        align: 'center'
+    }).setOrigin(0.5);
+
+
       this.createStarfield();
 
       this.sfx = {
