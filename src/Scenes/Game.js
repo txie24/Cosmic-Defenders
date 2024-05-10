@@ -193,6 +193,7 @@ class D1 extends Phaser.Scene {
                 }
                 if (this.checkOverlap(this.avatar, enemy)) {
                     enemy.destroy();
+                    this.sfx.exp1.play();
                     this.lives--;
                     this.livesText.setText('Lives: ' + this.lives);
                     if (this.lives <= 0 && !this.isGameOver) {
