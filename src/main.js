@@ -17,17 +17,3 @@ let config = {
 };
 
 const game = new Phaser.Game(config);
-let backgroundMusic;
-
-// When the game is ready, load and play music
-window.onload = () => {
-    game.events.on('ready', function () {
-        game.sound.on('unlocked', function () {
-            // Ensure sound is unlocked (user interacted with the page)
-            if (!backgroundMusic) {
-                backgroundMusic = game.sound.add('bgMusic', { volume: 0.5, loop: true });
-                backgroundMusic.play();
-            }
-        });
-    });
-};

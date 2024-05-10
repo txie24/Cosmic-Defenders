@@ -25,8 +25,8 @@ class SceneMainMenu extends Phaser.Scene {
       this.createStarfield();
 
       this.sfx = {
-          btnOver: this.sound.add("sndBtnOver"),
-          btnDown: this.sound.add("sndBtnDown")
+          btnOver: this.sound.add("sndBtnOver",{volume: 0.1}),
+          btnDown: this.sound.add("sndBtnDown",{volume: 0.1})
       };
 
       this.btnPlay = this.add.sprite(
@@ -52,7 +52,7 @@ class SceneMainMenu extends Phaser.Scene {
       this.btnPlay.on("pointerup", () => {
           this.scene.start("D1");
           if (!this.game.bgMusic) {
-              this.game.bgMusic = this.sound.add('bgMusic', { volume: 0.5, loop: true });
+              this.game.bgMusic = this.sound.add('bgMusic', { volume: 0.05, loop: true });
               this.game.bgMusic.play();
           }
       });

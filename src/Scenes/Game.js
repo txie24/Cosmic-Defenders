@@ -35,8 +35,8 @@ class D1 extends Phaser.Scene {
         this.initializeGame();
         this.createStarfield(); // Create starfield first to ensure it's at the bottom
         this.sfx = {
-            exp1: this.sound.add("exp1"),
-            exp2: this.sound.add("exp2")
+            exp1: this.sound.add("exp1",{volume: 0.1}),
+            exp2: this.sound.add("exp2",{volume: 0.1})
         };
 
     }
