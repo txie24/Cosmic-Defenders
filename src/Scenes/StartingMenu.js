@@ -6,22 +6,23 @@ class SceneMainMenu extends Phaser.Scene {
   }
 
   preload() {
-    this.load.setPath("./assets/");
-    this.load.image("sprBtnPlay", "sprBtnPlay.png");
-    this.load.image("sprBtnPlayHover", "sprBtnPlayHover.png");
-    this.load.image("sprBtnPlayDown", "sprBtnPlayDown.png");
-    this.load.image("sprBtnRestart", "sprBtnRestart.png");
-    this.load.image("sprBtnRestartHover", "sprBtnRestartHover.png");
-    this.load.image("sprBtnRestartDown", "sprBtnRestartDown.png");
-    this.load.image('sprBg0', 'space1.gif');
-    this.load.image('sprBg1', 'space2.gif');
-    this.load.image('sprBg2', 'space3.gif');
-    this.load.audio("sndBtnOver", "sndBtnOver.wav");
-    this.load.audio("sndBtnDown", "sndBtnDown.wav");
+      this.load.setPath("./assets/");
+      this.load.image("sprBtnPlay", "sprBtnPlay.png");
+      this.load.image("sprBtnPlayHover", "sprBtnPlayHover.png");
+      this.load.image("sprBtnPlayDown", "sprBtnPlayDown.png");
+      this.load.image("sprBtnRestart", "sprBtnRestart.png");
+      this.load.image("sprBtnRestartHover", "sprBtnRestartHover.png");
+      this.load.image("sprBtnRestartDown", "sprBtnRestartDown.png");
+      this.load.image('sprBg0', 'space1.gif');
+      this.load.image('sprBg1', 'space2.gif');
+      this.load.image('sprBg2', 'space3.gif');
+      this.load.audio("sndBtnOver", "sndBtnOver.wav");
+      this.load.audio("sndBtnDown", "sndBtnDown.wav");
+      this.load.audio('bgMusic', '8bit-spaceshooter.mp3');  // Make sure this path is correct
   }
 
   create() {
-    this.createStarfield(); // Create starfield first to ensure it's at the bottom
+      this.createStarfield();
 
       this.sfx = {
           btnOver: this.sound.add("sndBtnOver"),
@@ -50,6 +51,10 @@ class SceneMainMenu extends Phaser.Scene {
 
       this.btnPlay.on("pointerup", () => {
           this.scene.start("D1");
+          if (!this.game.bgMusic) {
+              this.game.bgMusic = this.sound.add('bgMusic', { volume: 0.5, loop: true });
+              this.game.bgMusic.play();
+          }
       });
 
       this.title = this.add.text(this.game.config.width * 0.5, 200, "Cosmic Defenders", {

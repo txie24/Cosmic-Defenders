@@ -174,10 +174,17 @@ class D1 extends Phaser.Scene {
         this.enemies.children.iterate((enemy) => {
             if (enemy) {
                 enemy.y += this.enemySpeed * this.game.loop.delta / 1000;
+                // Check if the enemy crosses the bottom game border
                 if (enemy.y >= this.sys.game.config.height) {
                     enemy.destroy();
                     this.lives--;
                     this.livesText.setText('Lives: ' + this.lives);
+                    // Immediately check for game over when lives are decremented
+                    if (this.lives <= 0 && !this.isGameOver) {
+                        this.isGameOver = true;
+                        this.scene.start("SceneGameOver");
+                        return; // Exit the function to avoid further processing
+                    }
                 }
                 if (Math.random() < 0.01) {
                     let enemyBullet = this.enemyBullets.create(enemy.x, enemy.y + enemy.height / 2, 'enemyBullet');
@@ -188,15 +195,21 @@ class D1 extends Phaser.Scene {
                     enemy.destroy();
                     this.lives--;
                     this.livesText.setText('Lives: ' + this.lives);
+                    if (this.lives <= 0 && !this.isGameOver) {
+                        this.isGameOver = true;
+                        this.scene.start("SceneGameOver");
+                        return; 
+                    }
                 }
             }
         });
-        // After iterating, check if all enemies are destroyed
-        if (this.enemies.countActive(true) === 0 && !this.isGameWin) {
+
+        if (this.enemies.countActive(true) === 0 && !this.isGameOver && !this.isGameWin) {
             this.isGameWin = true;
             this.scene.start("SceneWin");
         }
     }
+    
 
 
     checkGameOver() {
@@ -206,9 +219,6 @@ class D1 extends Phaser.Scene {
         }
     }
 
-
-
-    // Utility function to check overlap between two sprites
     checkOverlap(spriteA, spriteB) {
         const boundsA = spriteA.getBounds();
         const boundsB = spriteB.getBounds();
