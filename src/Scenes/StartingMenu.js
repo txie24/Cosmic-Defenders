@@ -28,7 +28,7 @@ class SceneMainMenu extends Phaser.Scene {
       this.game.config.height * 0.5,
       "sprBtnPlay"
     );
-
+    this.btnPlay.setScale(1);
     this.btnPlay.setInteractive();
 
     this.btnPlay.on("pointerover", function() {
@@ -50,9 +50,9 @@ class SceneMainMenu extends Phaser.Scene {
       this.scene.start("D1");
     }, this);
 
-    this.title = this.add.text(this.game.config.width * 0.5, 128, "Cosmic Defenders", {
+    this.title = this.add.text(this.game.config.width * 0.5, 200, "Cosmic Defenders", {
       fontFamily: 'monospace',
-      fontSize: 48,
+      fontSize: 45,
       fontStyle: 'bold',
       color: '#ffffff',
       align: 'center'
@@ -74,3 +74,4 @@ class SceneMainMenu extends Phaser.Scene {
     }
   }
 }
+

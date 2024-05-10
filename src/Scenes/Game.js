@@ -1,19 +1,21 @@
 class D1 extends Phaser.Scene {
     constructor() {
         super("D1");
+        // Initialize variables
         this.playerSpeed = 300;
         this.bulletSpeed = -500;
-        this.enemyBulletSpeed = 200;  // Speed of the enemy's bullets
+        this.enemyBulletSpeed = 200;
         this.enemySpeed = 50;
         this.avatar = null;
         this.bullets = null;
-        this.enemyBullets = null; // Group for enemy bullets
+        this.enemyBullets = null;
         this.enemies = null;
         this.keys = {};
-        this.score = 0;  // Initialize score
-        this.scoreText = null;  // Text object for displaying score
-        this.lives = 3;  // Player starts with 3 lives
-        this.livesText = null;  // Text object for displaying lives
+        this.score = 0;
+        this.scoreText = null;
+        this.lives = 3;
+        this.livesText = null;
+        this.isGameOver = false; // Flag to track game over state
     }
 
     preload() {
@@ -26,24 +28,47 @@ class D1 extends Phaser.Scene {
     }
 
     create() {
-        this.avatar = this.add.sprite(350, 950, 'avatar');
+        this.initializeGame();
+    }
+    
+    initializeGame() {
+        this.avatar = this.add.sprite(250, 750, 'avatar').setScale(0.5);
         this.bullets = this.add.group();
         this.enemyBullets = this.add.group();
         this.enemies = this.add.group({
             classType: Phaser.GameObjects.Sprite,
             key: 'enemy',
             repeat: 3,
-            setXY: { x: 120, y: 100, stepX: 150, stepY: 100 }
+            setXY: { x: 50, y: 100, stepX: 100, stepY: 100 }
         });
-
-        // Initialize score and lives text
+        this.enemies.children.iterate((enemy) => {
+            enemy.setScale(0.5);
+        });
+    
+        this.score = 0;
+        this.lives = 3;
         this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
         this.livesText = this.add.text(16, 50, 'Lives: 3', { fontSize: '32px', fill: '#FFF' });
+    
+        this.keys = this.input.keyboard.addKeys({
+            left: Phaser.Input.Keyboard.KeyCodes.A,
+            right: Phaser.Input.Keyboard.KeyCodes.D,
+            shoot: Phaser.Input.Keyboard.KeyCodes.SPACE
+        });
+    
+        this.isGameOver = false;
+    }
 
-        // Define keys
-        this.keys.left = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-        this.keys.right = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-        this.keys.shoot = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    
+    
+    checkGameOver() {
+        // Check if the game is over
+        if (this.lives <= 0 && !this.isGameOver) {
+            this.isGameOver = true; // Prevent multiple triggers
+            this.time.delayedCall(1000, () => {
+                this.scene.start("SceneGameOver"); // Start game over scene after delay
+            }, [], this);
+        }
     }
 
     update() {
@@ -58,6 +83,7 @@ class D1 extends Phaser.Scene {
         if (Phaser.Input.Keyboard.JustDown(this.keys.shoot)) {
             let bullet = this.bullets.create(this.avatar.x, this.avatar.y - this.avatar.height, 'bullet');
             bullet.setVelocityY(this.bulletSpeed);
+            bullet.setScale(0.5);  
         }
 
         // Update bullet positions and check for collisions
@@ -92,6 +118,8 @@ class D1 extends Phaser.Scene {
                 if (Math.random() < 0.01) { // Random chance for each enemy to shoot
                     let enemyBullet = this.enemyBullets.create(enemy.x, enemy.y + enemy.height / 2, 'enemyBullet');
                     enemyBullet.setVelocityY(this.enemyBulletSpeed);
+                    enemyBullet.setScale(0.5);  
+                    
                 }
                 if (this.checkOverlap(this.avatar, enemy)) { // Check if player collides with enemy
                     enemy.destroy();
@@ -108,9 +136,9 @@ class D1 extends Phaser.Scene {
                 if (enemyBullet.y > this.sys.game.config.height) {
                     enemyBullet.destroy();
                 }
-                if (this.checkOverlap(this.avatar, enemyBullet)) { // Enemy bullet hits player
+                if (this.checkOverlap(this.avatar, enemyBullet)) { 
                     enemyBullet.destroy();
-                    this.lives--;  // Player loses a life
+                    this.lives--;
                     this.livesText.setText('Lives: ' + this.lives);
                 }
             }
@@ -119,8 +147,9 @@ class D1 extends Phaser.Scene {
         // Game over check
         if (this.lives <= 0 && !this.isGameOver) {
             this.isGameOver = true;  // Set game over flag to true
-                this.scene.restart();  // Restart the scene after a delay
+            this.scene.start("SceneGameOver"); // Start game over scene after delay
         }
+        this.checkGameOver();
     }
 
     // Utility function to check overlap between two sprites
@@ -129,4 +158,5 @@ class D1 extends Phaser.Scene {
         const boundsB = spriteB.getBounds();
         return Phaser.Geom.Intersects.RectangleToRectangle(boundsA, boundsB);
     }
+    
 }
