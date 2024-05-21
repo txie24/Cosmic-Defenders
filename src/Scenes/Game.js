@@ -5,12 +5,13 @@ class D1 extends Phaser.Scene {
         this.bulletSpeed = -500;
         this.enemyBulletSpeed = 200;
         this.enemySpeed = 50;
-        this.bossSpeed = 50; // Very slow speed for the boss
+        this.bossSpeed = 30; // Very slow speed for the boss
         this.avatar = null;
         this.bullets = null;
         this.enemyBullets = null;
         this.enemies = null;
         this.boss = null;
+        this.bossMinions = null; // Group for boss minions
         this.keys = {};
         this.score = 0;
         this.scoreText = null;
@@ -53,17 +54,16 @@ class D1 extends Phaser.Scene {
         this.bullets = this.add.group();
         this.enemyBullets = this.add.group();
         this.enemies = this.add.group(); // Initialize enemies group
+        this.bossMinions = this.add.group(); // Initialize boss minions group
         this.boss = null; // Reset boss
     
-        // Initialize score, lives, and wave display
         this.score = 0;
         this.lives = 10;
-        this.currentWave = 1; // Reset wave count
+        this.currentWave = 1; 
         this.waveText = this.add.text(16, 16, 'Wave: 1', { fontSize: '32px', fill: '#FFF' });
         this.scoreText = this.add.text(16, 50, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
         this.livesText = this.add.text(16, 84, 'Lives: 10', { fontSize: '32px', fill: '#FFF' });
     
-        // Setup keyboard controls for player movement and shooting
         this.keys = this.input.keyboard.addKeys({
             left: Phaser.Input.Keyboard.KeyCodes.A,
             right: Phaser.Input.Keyboard.KeyCodes.D,
@@ -72,9 +72,8 @@ class D1 extends Phaser.Scene {
             shoot: Phaser.Input.Keyboard.KeyCodes.SPACE
         });
     
-        // Set the game over flag to false initially
         this.isGameOver = false;
-        this.isGameWin = false; // Flag to track game win state
+        this.isGameWin = false; 
     }
 
     createStarfield() {
@@ -84,7 +83,6 @@ class D1 extends Phaser.Scene {
     }
 
     startWave(wave) {
-        // Customize each wave as needed
         switch(wave) {
             case 1:
                 this.setupWave1();
@@ -113,7 +111,8 @@ class D1 extends Phaser.Scene {
 
     setupWave3() {
         // Setup boss for wave 3
-        this.setupBoss({ x: this.sys.game.config.width / 2, y: 100 }, 'boss', 15,);
+        this.setupBoss({ x: this.sys.game.config.width / 2, y: 100 }, 'boss', 30);
+        this.spawnBossMinions();
     }
 
     setupEnemies(count, position, spriteKey, hitPoints, scoreValue) {
@@ -127,7 +126,7 @@ class D1 extends Phaser.Scene {
         // Iterate over each enemy to set initial properties
         this.enemies.children.iterate((enemy) => {
             enemy.setScale(0.5);
-            enemy.nextShootTime = 100;  // Initialize with no cooldown
+            enemy.nextShootTime = Phaser.Math.Between(50, 200);  // Initialize with random shoot cooldown
             enemy.hitPoints = hitPoints; // Add hitPoints to enemy
             enemy.scoreValue = scoreValue; // Add score value to enemy
         });
@@ -137,7 +136,19 @@ class D1 extends Phaser.Scene {
         this.boss = this.add.sprite(position.x, position.y, spriteKey).setScale(1.5); // Make the boss big
         this.boss.hitPoints = hitPoints;
         this.boss.scoreValue = 50; // You can set any score value for the boss
-        this.boss.shootCooldown = 50; // Cooldown for boss shooting
+        this.boss.shootCooldown1 = Phaser.Math.Between(50, 200); // Cooldown for the first boss bullet
+        this.boss.shootCooldown2 = Phaser.Math.Between(50, 200); // Cooldown for the second boss bullet
+        this.boss.relativePositions = [{ x: -150, y: 0 }, { x: 150, y: 0 }];
+    }
+
+    spawnBossMinions() {
+        this.boss.relativePositions.forEach((relativePosition, index) => {
+            let minion = this.bossMinions.create(this.boss.x + relativePosition.x, this.boss.y + relativePosition.y, 'enemy');
+            minion.setScale(0.5);
+            minion.hitPoints = 3; 
+            minion.shootCooldown = Phaser.Math.Between(50, 200); 
+            minion.relativeIndex = index; 
+        });
     }
 
     update() {
@@ -200,6 +211,19 @@ class D1 extends Phaser.Scene {
                         }
                     });
 
+                    this.bossMinions.children.iterate((minion) => {
+                        if (minion && this.checkOverlap(bullet, minion)) {
+                            bullet.destroy();
+                            minion.hitPoints--; // Reduce hitPoints by 1
+                            if (minion.hitPoints <= 0) {
+                                this.sfx.exp1.play();
+                                this.score += 10; // Add score for each minion
+                                this.scoreText.setText('Score: ' + this.score);
+                                minion.destroy();
+                            }
+                        }
+                    });
+
                     if (this.boss && this.checkOverlap(bullet, this.boss)) {
                         bullet.destroy();
                         this.boss.hitPoints--; // Reduce boss hitPoints by 1
@@ -208,6 +232,7 @@ class D1 extends Phaser.Scene {
                             this.score += this.boss.scoreValue; // Add score for the boss
                             this.scoreText.setText('Score: ' + this.score);
                             this.boss.destroy();
+                            this.bossMinions.clear(true, true); // Clear all boss minions
                             this.isGameWin = true;
                             this.scene.start("SceneWin");
                         }
@@ -244,7 +269,10 @@ class D1 extends Phaser.Scene {
                 if (enemy.y >= this.sys.game.config.height) {
                     enemy.destroy();
                 }
-                if (Math.random() < 0.01) {
+                if (enemy.shootCooldown > 0) {
+                    enemy.shootCooldown--;
+                } else {
+                    enemy.shootCooldown = Phaser.Math.Between(50, 200);
                     let enemyBullet = this.enemyBullets.create(enemy.x, enemy.y + enemy.height / 2, 'enemyBullet');
                     enemyBullet.setVelocityY(this.enemyBulletSpeed);
                     enemyBullet.setScale(0.5);
@@ -265,13 +293,31 @@ class D1 extends Phaser.Scene {
 
         if (this.boss) {
             this.boss.y += this.bossSpeed * this.game.loop.delta / 1000;
-            if (this.boss.shootCooldown > 0) {
-                this.boss.shootCooldown--;
+            if (this.boss.shootCooldown1 > 0) {
+                this.boss.shootCooldown1--;
             } else {
-                this.boss.shootCooldown = 50;
-                this.shootBossBullets();
+                this.boss.shootCooldown1 = Phaser.Math.Between(50, 200);
+                this.shootBossBullet1();
             }
+            if (this.boss.shootCooldown2 > 0) {
+                this.boss.shootCooldown2--;
+            } else {
+                this.boss.shootCooldown2 = Phaser.Math.Between(50, 200);
+                this.shootBossBullet2();
+            }
+            this.updateBossMinions(); 
         }
+
+        this.bossMinions.children.iterate((minion) => {
+            if (minion.shootCooldown > 0) {
+                minion.shootCooldown--;
+            } else {
+                minion.shootCooldown = Phaser.Math.Between(50, 200);
+                let minionBullet = this.enemyBullets.create(minion.x, minion.y, 'enemyBullet');
+                minionBullet.setVelocityY(this.enemyBulletSpeed);
+                minionBullet.setScale(0.5);
+            }
+        });
 
         if (this.enemies.countActive(true) === 0 && !this.isGameOver && !this.boss) {
             if (this.currentWave < this.totalWaves) {
@@ -284,13 +330,24 @@ class D1 extends Phaser.Scene {
         }
     }
 
-    shootBossBullets() {
-        let bullet1 = this.enemyBullets.create(this.boss.x - this.boss.width / 4, this.boss.y + this.boss.height / 2, 'enemyBullet');
-        let bullet2 = this.enemyBullets.create(this.boss.x + this.boss.width / 4, this.boss.y + this.boss.height / 2, 'enemyBullet');
-        bullet1.setVelocityY(this.enemyBulletSpeed);
-        bullet2.setVelocityY(this.enemyBulletSpeed);
-        bullet1.setScale(0.5);
-        bullet2.setScale(0.5);
+    updateBossMinions() {
+        this.bossMinions.children.iterate((minion) => {
+            let relativePosition = this.boss.relativePositions[minion.relativeIndex];
+            minion.x = this.boss.x + relativePosition.x;
+            minion.y = this.boss.y + relativePosition.y;
+        });
+    }
+
+    shootBossBullet1() {
+        let bullet = this.enemyBullets.create(this.boss.x - this.boss.width / 4, this.boss.y + this.boss.height / 2, 'enemyBullet');
+        bullet.setVelocityY(this.enemyBulletSpeed);
+        bullet.setScale(0.5);
+    }
+
+    shootBossBullet2() {
+        let bullet = this.enemyBullets.create(this.boss.x + this.boss.width / 4, this.boss.y + this.boss.height / 2, 'enemyBullet');
+        bullet.setVelocityY(this.enemyBulletSpeed);
+        bullet.setScale(0.5);
     }
 
     checkGameOver() {
