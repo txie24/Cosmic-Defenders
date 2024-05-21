@@ -47,7 +47,8 @@ class SceneWin extends Phaser.Scene {
 
         this.btnRestart.on("pointerup", () => {
             this.btnRestart.setTexture("sprBtnRestart");
-            this.scene.start("D1", { restart: true });
+            this.scene.start("SceneMainMenu")
+            ;
         });
     }
 }

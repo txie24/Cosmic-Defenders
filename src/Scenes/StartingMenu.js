@@ -63,7 +63,7 @@ class SceneMainMenu extends Phaser.Scene {
       });
 
       this.btnPlay.on("pointerup", () => {
-          this.scene.start("D1");
+        this.scene.start("D1", { restart: true });
           if (!this.game.bgMusic) {
               this.game.bgMusic = this.sound.add('bgMusic', { volume: 0.05, loop: true });
               this.game.bgMusic.play();
