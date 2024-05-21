@@ -12,10 +12,12 @@ class D1 extends Phaser.Scene {
         this.keys = {};
         this.score = 0;
         this.scoreText = null;
-        this.lives = 3;
+        this.lives = 10;
         this.livesText = null;
         this.isGameOver = false;
         this.isGameWin = false;
+        this.currentWave = 1;
+        this.totalWaves = 3;
     }
 
     preload() {
@@ -31,14 +33,17 @@ class D1 extends Phaser.Scene {
         this.load.audio("exp2", "sndExplode1.wav");
     }
     
-    create() {
+    create(data) {
+        if (data && data.restart) {
+            this.currentWave = 1;
+        }
         this.initializeGame();
         this.createStarfield(); // Create starfield first to ensure it's at the bottom
         this.sfx = {
             exp1: this.sound.add("exp1",{volume: 0.1}),
             exp2: this.sound.add("exp2",{volume: 0.1})
         };
-
+        this.startWave(this.currentWave);
     }
 
     initializeGame() {
@@ -46,25 +51,11 @@ class D1 extends Phaser.Scene {
         this.bullets = this.add.group();
         this.enemyBullets = this.add.group();
     
-        // Setup enemies with a cooldown for shooting to prevent bullet overlap
-        this.enemies = this.add.group({
-            classType: Phaser.GameObjects.Sprite,
-            key: 'enemy',
-            repeat: 4,
-            setXY: { x: 50, y: 100, stepX: 100, stepY: 100 }
-        });
-    
-        // Iterate over each enemy to set initial properties
-        this.enemies.children.iterate((enemy) => {
-            enemy.setScale(0.5);
-            enemy.nextShootTime = 100;  // Initialize with no cooldown
-        });
-    
         // Initialize score and lives display
         this.score = 0;
-        this.lives = 3;
+        this.lives = 10;
         this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
-        this.livesText = this.add.text(16, 50, 'Lives: 3', { fontSize: '32px', fill: '#FFF' });
+        this.livesText = this.add.text(16, 50, 'Lives: 10', { fontSize: '32px', fill: '#FFF' });
     
         // Setup keyboard controls for player movement and shooting
         this.keys = this.input.keyboard.addKeys({
@@ -87,6 +78,53 @@ class D1 extends Phaser.Scene {
         this.starfieldFront = this.add.tileSprite(0, 0, this.sys.game.config.width, this.sys.game.config.height, 'sprBg2').setOrigin(0, 0).setDepth(-3);
     }
 
+    startWave(wave) {
+        // Customize each wave as needed
+        switch(wave) {
+            case 1:
+                this.setupWave1();
+                break;
+            case 2:
+                this.setupWave2();
+                break;
+            case 3:
+                this.setupWave3();
+                break;
+            default:
+                console.error("Invalid wave number");
+        }
+    }
+
+    setupWave1() {
+        // Setup enemies for wave 1
+        this.setupEnemies(5, { x: 50, y: 100, stepX: 100, stepY: 100 });
+    }
+
+    setupWave2() {
+        // Setup enemies for wave 2
+        this.setupEnemies(5, { x: 50, y: 100, stepX: 100, stepY: 100 });
+    }
+
+    setupWave3() {
+        // Setup enemies for wave 3
+        this.setupEnemies(5, { x: 50, y: 100, stepX: 100, stepY: 100 });
+    }
+
+    setupEnemies(count, position) {
+        this.enemies = this.add.group({
+            classType: Phaser.GameObjects.Sprite,
+            key: 'enemy',
+            repeat: count - 1,
+            setXY: position
+        });
+    
+        // Iterate over each enemy to set initial properties
+        this.enemies.children.iterate((enemy) => {
+            enemy.setScale(0.5);
+            enemy.nextShootTime = 100;  // Initialize with no cooldown
+        });
+    }
+
     update() {
         this.handlePlayerMovement();
         this.handleShooting();
@@ -104,6 +142,7 @@ class D1 extends Phaser.Scene {
         this.starfieldMiddle.tilePositionY -= 0.7;
         this.starfieldFront.tilePositionY -= 1;
     }
+
     handlePlayerMovement() {
         if (this.keys.left.isDown && this.avatar.x > this.avatar.width * 0.5) {
             this.avatar.x -= this.playerSpeed * this.game.loop.delta / 1000;
@@ -118,7 +157,6 @@ class D1 extends Phaser.Scene {
         }
     }
     
-
     handleShooting() {
         if (Phaser.Input.Keyboard.JustDown(this.keys.shoot)) {
             let bullet = this.bullets.create(this.avatar.x, this.avatar.y - this.avatar.height, 'bullet');
@@ -128,7 +166,6 @@ class D1 extends Phaser.Scene {
     }
 
     updateBullets() {
-        // Update player bullets
         this.bullets.children.iterate((bullet) => {
             if (bullet) {
                 bullet.y += this.bulletSpeed * this.game.loop.delta / 1000;
@@ -148,18 +185,15 @@ class D1 extends Phaser.Scene {
             }
         });
     
-        // Update enemy bullets
         this.enemyBullets.children.iterate((enemyBullet) => {
             if (enemyBullet) {
                 enemyBullet.y += this.enemyBulletSpeed * this.game.loop.delta / 1000;
                 if (enemyBullet.y > this.sys.game.config.height) {
                     enemyBullet.destroy();
                 } else {
-                    // Check for collision with the player avatar
                     if (this.checkOverlap(enemyBullet, this.avatar)) {
                         enemyBullet.destroy();
                         this.lives--;
-                        //this.sfx.hit1.play();
                         this.livesText.setText('Lives: ' + this.lives);
                         if (this.lives <= 0 && !this.isGameOver) {
                             this.sfx.exp2.play();
@@ -171,22 +205,19 @@ class D1 extends Phaser.Scene {
             }
         });
     }
-    
 
     manageEnemyActions() {
         this.enemies.children.iterate((enemy) => {
             if (enemy) {
                 enemy.y += this.enemySpeed * this.game.loop.delta / 1000;
-                // Check if the enemy crosses the bottom game border
                 if (enemy.y >= this.sys.game.config.height) {
                     enemy.destroy();
                     this.lives--;
                     this.livesText.setText('Lives: ' + this.lives);
-                    // Immediately check for game over when lives are decremented
                     if (this.lives <= 0 && !this.isGameOver) {
                         this.isGameOver = true;
                         this.scene.start("SceneGameOver");
-                        return; // Exit the function to avoid further processing
+                        return;
                     }
                 }
                 if (Math.random() < 0.01) {
@@ -202,19 +233,22 @@ class D1 extends Phaser.Scene {
                     if (this.lives <= 0 && !this.isGameOver) {
                         this.isGameOver = true;
                         this.scene.start("SceneGameOver");
-                        return; 
+                        return;
                     }
                 }
             }
         });
 
-        if (this.enemies.countActive(true) === 0 && !this.isGameOver && !this.isGameWin) {
-            this.isGameWin = true;
-            this.scene.start("SceneWin");
+        if (this.enemies.countActive(true) === 0 && !this.isGameOver) {
+            if (this.currentWave < this.totalWaves) {
+                this.currentWave++;
+                this.startWave(this.currentWave);
+            } else {
+                this.isGameWin = true;
+                this.scene.start("SceneWin");
+            }
         }
     }
-    
-
 
     checkGameOver() {
         if (this.lives <= 0 && !this.isGameOver) {
@@ -228,5 +262,4 @@ class D1 extends Phaser.Scene {
         const boundsB = spriteB.getBounds();
         return Phaser.Geom.Intersects.RectangleToRectangle(boundsA, boundsB);
     }
-    
 }
