@@ -14,6 +14,7 @@ class D1 extends Phaser.Scene {
         this.scoreText = null;
         this.lives = 10;
         this.livesText = null;
+        this.waveText = null;
         this.isGameOver = false;
         this.isGameWin = false;
         this.currentWave = 1;
@@ -25,6 +26,7 @@ class D1 extends Phaser.Scene {
         this.load.image('avatar', 'playerShip3_blue.png');
         this.load.image('bullet', 'laserBlue01.png');
         this.load.image('enemy', 'enemyBlack3.png');
+        this.load.image('enemyWave2', 'enemyBlack4.png'); // Load new enemy sprite for wave 2
         this.load.image('enemyBullet', 'laserRed05.png');
         this.load.image('sprBg0', 'space1.gif');
         this.load.image('sprBg1', 'space2.gif');
@@ -51,11 +53,12 @@ class D1 extends Phaser.Scene {
         this.bullets = this.add.group();
         this.enemyBullets = this.add.group();
     
-        // Initialize score and lives display
+        // Initialize score, lives, and wave display
         this.score = 0;
         this.lives = 10;
-        this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
-        this.livesText = this.add.text(16, 50, 'Lives: 10', { fontSize: '32px', fill: '#FFF' });
+        this.waveText = this.add.text(16, 16, 'Wave: 1', { fontSize: '32px', fill: '#FFF' });
+        this.scoreText = this.add.text(16, 50, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
+        this.livesText = this.add.text(16, 84, 'Lives: 10', { fontSize: '32px', fill: '#FFF' });
     
         // Setup keyboard controls for player movement and shooting
         this.keys = this.input.keyboard.addKeys({
@@ -69,7 +72,6 @@ class D1 extends Phaser.Scene {
         // Set the game over flag to false initially
         this.isGameOver = false;
         this.isGameWin = false; // Flag to track game win state
-
     }
 
     createStarfield() {
@@ -93,27 +95,28 @@ class D1 extends Phaser.Scene {
             default:
                 console.error("Invalid wave number");
         }
+        this.waveText.setText('Wave: ' + wave); // Update wave text
     }
 
     setupWave1() {
         // Setup enemies for wave 1
-        this.setupEnemies(5, { x: 50, y: 100, stepX: 100, stepY: 100 });
+        this.setupEnemies(5, { x: 50, y: 100, stepX: 100, stepY: 100 }, 'enemy', 1);
     }
 
     setupWave2() {
-        // Setup enemies for wave 2
-        this.setupEnemies(5, { x: 50, y: 100, stepX: 100, stepY: 100 });
+        // Setup enemies for wave 2 with different formation and sprite
+        this.setupEnemies(7, { x: 50, y: 100, stepX: 80, stepY: 80 }, 'enemyWave2', 2);
     }
 
     setupWave3() {
         // Setup enemies for wave 3
-        this.setupEnemies(5, { x: 50, y: 100, stepX: 100, stepY: 100 });
+        this.setupEnemies(5, { x: 50, y: 100, stepX: 100, stepY: 100 }, 'enemy', 1);
     }
 
-    setupEnemies(count, position) {
+    setupEnemies(count, position, spriteKey, hitPoints) {
         this.enemies = this.add.group({
             classType: Phaser.GameObjects.Sprite,
-            key: 'enemy',
+            key: spriteKey,
             repeat: count - 1,
             setXY: position
         });
@@ -122,6 +125,7 @@ class D1 extends Phaser.Scene {
         this.enemies.children.iterate((enemy) => {
             enemy.setScale(0.5);
             enemy.nextShootTime = 100;  // Initialize with no cooldown
+            enemy.hitPoints = hitPoints; // Add hitPoints to enemy
         });
     }
 
@@ -175,10 +179,13 @@ class D1 extends Phaser.Scene {
                     this.enemies.children.iterate((enemy) => {
                         if (enemy && this.checkOverlap(bullet, enemy)) {
                             bullet.destroy();
-                            enemy.destroy();
-                            this.sfx.exp1.play();
-                            this.score += 10;
-                            this.scoreText.setText('Score: ' + this.score);
+                            enemy.hitPoints--; // Reduce hitPoints by 1
+                            if (enemy.hitPoints <= 0) {
+                                enemy.destroy();
+                                this.sfx.exp1.play();
+                                this.score += 10;
+                                this.scoreText.setText('Score: ' + this.score);
+                            }
                         }
                     });
                 }
