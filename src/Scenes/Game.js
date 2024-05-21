@@ -5,7 +5,7 @@ class D1 extends Phaser.Scene {
         this.bulletSpeed = -500;
         this.enemyBulletSpeed = 200;
         this.enemySpeed = 50;
-        this.bossSpeed = 30; // Very slow speed for the boss
+        this.bossSpeed = 30; // Slow speed for the boss
         this.avatar = null;
         this.bullets = null;
         this.enemyBullets = null;
@@ -22,6 +22,7 @@ class D1 extends Phaser.Scene {
         this.isGameWin = false;
         this.currentWave = 1;
         this.totalWaves = 3;
+        this.isPaused = false; // To pause the game during the boss battle image display
     }
 
     preload() {
@@ -31,6 +32,7 @@ class D1 extends Phaser.Scene {
         this.load.image('enemy', 'enemyBlack3.png');
         this.load.image('enemyWave2', 'enemyBlack4.png'); // Load new enemy sprite for wave 2
         this.load.image('boss', 'Bossship1.png'); // Load boss ship sprite
+        this.load.image('bossBattle', 'boss battle.png'); // Load boss battle image
         this.load.image('enemyBullet', 'laserRed05.png');
         this.load.image('sprBg0', 'space1.gif');
         this.load.image('sprBg1', 'space2.gif');
@@ -74,6 +76,7 @@ class D1 extends Phaser.Scene {
     
         this.isGameOver = false;
         this.isGameWin = false; 
+        this.isPaused = false;
     }
 
     createStarfield() {
@@ -91,7 +94,7 @@ class D1 extends Phaser.Scene {
                 this.setupWave2();
                 break;
             case 3:
-                this.setupWave3();
+                this.showBossBattleImage();
                 break;
             default:
                 console.error("Invalid wave number");
@@ -100,17 +103,14 @@ class D1 extends Phaser.Scene {
     }
 
     setupWave1() {
-        // Setup enemies for wave 1
         this.setupEnemies(5, { x: 50, y: 100, stepX: 100, stepY: 100 }, 'enemy', 1, 10);
     }
 
     setupWave2() {
-        // Setup enemies for wave 2 with different formation and sprite
         this.setupEnemies(7, { x: 50, y: 100, stepX: 80, stepY: 80 }, 'enemyWave2', 2, 15);
     }
 
     setupWave3() {
-        // Setup boss for wave 3
         this.setupBoss({ x: this.sys.game.config.width / 2, y: 100 }, 'boss', 30);
         this.spawnBossMinions();
     }
@@ -123,7 +123,6 @@ class D1 extends Phaser.Scene {
             setXY: position
         });
     
-        // Iterate over each enemy to set initial properties
         this.enemies.children.iterate((enemy) => {
             enemy.setScale(0.5);
             enemy.nextShootTime = Phaser.Math.Between(50, 200);  // Initialize with random shoot cooldown
@@ -151,7 +150,21 @@ class D1 extends Phaser.Scene {
         });
     }
 
+    showBossBattleImage() {
+        this.isPaused = true; // Pause the game
+        let bossBattleImage = this.add.sprite(this.sys.game.config.width / 2, this.sys.game.config.height / 2, 'bossBattle');
+        bossBattleImage.setScale(1.0);
+        this.time.delayedCall(1000, () => {
+            bossBattleImage.destroy();
+            this.isPaused = false; // Resume the game
+            this.setupWave3();
+        }, [], this);
+    }
+
     update() {
+        if (this.isPaused) {
+            return; // Do nothing if the game is paused
+        }
         this.handlePlayerMovement();
         this.handleShooting();
         this.updateBullets();
