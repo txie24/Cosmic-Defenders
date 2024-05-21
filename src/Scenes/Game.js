@@ -5,10 +5,12 @@ class D1 extends Phaser.Scene {
         this.bulletSpeed = -500;
         this.enemyBulletSpeed = 200;
         this.enemySpeed = 50;
+        this.bossSpeed = 50; // Very slow speed for the boss
         this.avatar = null;
         this.bullets = null;
         this.enemyBullets = null;
         this.enemies = null;
+        this.boss = null;
         this.keys = {};
         this.score = 0;
         this.scoreText = null;
@@ -27,6 +29,7 @@ class D1 extends Phaser.Scene {
         this.load.image('bullet', 'laserBlue01.png');
         this.load.image('enemy', 'enemyBlack3.png');
         this.load.image('enemyWave2', 'enemyBlack4.png'); // Load new enemy sprite for wave 2
+        this.load.image('boss', 'Bossship1.png'); // Load boss ship sprite
         this.load.image('enemyBullet', 'laserRed05.png');
         this.load.image('sprBg0', 'space1.gif');
         this.load.image('sprBg1', 'space2.gif');
@@ -36,9 +39,6 @@ class D1 extends Phaser.Scene {
     }
     
     create(data) {
-        if (data && data.restart) {
-            this.currentWave = 1;
-        }
         this.initializeGame();
         this.createStarfield(); // Create starfield first to ensure it's at the bottom
         this.sfx = {
@@ -52,10 +52,13 @@ class D1 extends Phaser.Scene {
         this.avatar = this.add.sprite(250, 750, 'avatar').setScale(0.5);
         this.bullets = this.add.group();
         this.enemyBullets = this.add.group();
+        this.enemies = this.add.group(); // Initialize enemies group
+        this.boss = null; // Reset boss
     
         // Initialize score, lives, and wave display
         this.score = 0;
         this.lives = 10;
+        this.currentWave = 1; // Reset wave count
         this.waveText = this.add.text(16, 16, 'Wave: 1', { fontSize: '32px', fill: '#FFF' });
         this.scoreText = this.add.text(16, 50, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
         this.livesText = this.add.text(16, 84, 'Lives: 10', { fontSize: '32px', fill: '#FFF' });
@@ -100,20 +103,20 @@ class D1 extends Phaser.Scene {
 
     setupWave1() {
         // Setup enemies for wave 1
-        this.setupEnemies(5, { x: 50, y: 100, stepX: 100, stepY: 100 }, 'enemy', 1);
+        this.setupEnemies(5, { x: 50, y: 100, stepX: 100, stepY: 100 }, 'enemy', 1, 10);
     }
 
     setupWave2() {
         // Setup enemies for wave 2 with different formation and sprite
-        this.setupEnemies(7, { x: 50, y: 100, stepX: 80, stepY: 80 }, 'enemyWave2', 2);
+        this.setupEnemies(7, { x: 50, y: 100, stepX: 80, stepY: 80 }, 'enemyWave2', 2, 15);
     }
 
     setupWave3() {
-        // Setup enemies for wave 3
-        this.setupEnemies(5, { x: 50, y: 100, stepX: 100, stepY: 100 }, 'enemy', 1);
+        // Setup boss for wave 3
+        this.setupBoss({ x: this.sys.game.config.width / 2, y: 100 }, 'boss', 15,);
     }
 
-    setupEnemies(count, position, spriteKey, hitPoints) {
+    setupEnemies(count, position, spriteKey, hitPoints, scoreValue) {
         this.enemies = this.add.group({
             classType: Phaser.GameObjects.Sprite,
             key: spriteKey,
@@ -126,7 +129,15 @@ class D1 extends Phaser.Scene {
             enemy.setScale(0.5);
             enemy.nextShootTime = 100;  // Initialize with no cooldown
             enemy.hitPoints = hitPoints; // Add hitPoints to enemy
+            enemy.scoreValue = scoreValue; // Add score value to enemy
         });
+    }
+
+    setupBoss(position, spriteKey, hitPoints) {
+        this.boss = this.add.sprite(position.x, position.y, spriteKey).setScale(1.5); // Make the boss big
+        this.boss.hitPoints = hitPoints;
+        this.boss.scoreValue = 50; // You can set any score value for the boss
+        this.boss.shootCooldown = 50; // Cooldown for boss shooting
     }
 
     update() {
@@ -181,13 +192,26 @@ class D1 extends Phaser.Scene {
                             bullet.destroy();
                             enemy.hitPoints--; // Reduce hitPoints by 1
                             if (enemy.hitPoints <= 0) {
-                                enemy.destroy();
                                 this.sfx.exp1.play();
-                                this.score += 10;
+                                this.score += enemy.scoreValue; // Add score based on enemy's score value
                                 this.scoreText.setText('Score: ' + this.score);
+                                enemy.destroy();
                             }
                         }
                     });
+
+                    if (this.boss && this.checkOverlap(bullet, this.boss)) {
+                        bullet.destroy();
+                        this.boss.hitPoints--; // Reduce boss hitPoints by 1
+                        if (this.boss.hitPoints <= 0) {
+                            this.sfx.exp1.play();
+                            this.score += this.boss.scoreValue; // Add score for the boss
+                            this.scoreText.setText('Score: ' + this.score);
+                            this.boss.destroy();
+                            this.isGameWin = true;
+                            this.scene.start("SceneWin");
+                        }
+                    }
                 }
             }
         });
@@ -219,13 +243,6 @@ class D1 extends Phaser.Scene {
                 enemy.y += this.enemySpeed * this.game.loop.delta / 1000;
                 if (enemy.y >= this.sys.game.config.height) {
                     enemy.destroy();
-                    this.lives--;
-                    this.livesText.setText('Lives: ' + this.lives);
-                    if (this.lives <= 0 && !this.isGameOver) {
-                        this.isGameOver = true;
-                        this.scene.start("SceneGameOver");
-                        return;
-                    }
                 }
                 if (Math.random() < 0.01) {
                     let enemyBullet = this.enemyBullets.create(enemy.x, enemy.y + enemy.height / 2, 'enemyBullet');
@@ -246,7 +263,17 @@ class D1 extends Phaser.Scene {
             }
         });
 
-        if (this.enemies.countActive(true) === 0 && !this.isGameOver) {
+        if (this.boss) {
+            this.boss.y += this.bossSpeed * this.game.loop.delta / 1000;
+            if (this.boss.shootCooldown > 0) {
+                this.boss.shootCooldown--;
+            } else {
+                this.boss.shootCooldown = 50;
+                this.shootBossBullets();
+            }
+        }
+
+        if (this.enemies.countActive(true) === 0 && !this.isGameOver && !this.boss) {
             if (this.currentWave < this.totalWaves) {
                 this.currentWave++;
                 this.startWave(this.currentWave);
@@ -255,6 +282,15 @@ class D1 extends Phaser.Scene {
                 this.scene.start("SceneWin");
             }
         }
+    }
+
+    shootBossBullets() {
+        let bullet1 = this.enemyBullets.create(this.boss.x - this.boss.width / 4, this.boss.y + this.boss.height / 2, 'enemyBullet');
+        let bullet2 = this.enemyBullets.create(this.boss.x + this.boss.width / 4, this.boss.y + this.boss.height / 2, 'enemyBullet');
+        bullet1.setVelocityY(this.enemyBulletSpeed);
+        bullet2.setVelocityY(this.enemyBulletSpeed);
+        bullet1.setScale(0.5);
+        bullet2.setScale(0.5);
     }
 
     checkGameOver() {
